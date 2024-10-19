@@ -38,19 +38,19 @@ class Ball {
                 this.y - this.radius < bar.y + bar.height
             ) {
                 if (bar.axis === 'x' && this.ysp > 0 && this.y - this.radius < bar.y) {
-                    this.ysp *= -1;
-                    this.y = bar.y - this.radius;
+                    this.ysp *= -1; // Bounce from top of horizontal bar
+                    this.y = bar.y - this.radius; // Prevent getting inside the bar
                     bounced = true;
                 } else if (bar.axis === 'x' && this.ysp < 0 && this.y + this.radius > bar.y + bar.height) {
-                    this.ysp *= -1;
+                    this.ysp *= -1; // Bounce from bottom of horizontal bar
                     this.y = bar.y + bar.height + this.radius;
                     bounced = true;
                 } else if (bar.axis === 'y' && this.xsp > 0 && this.x - this.radius < bar.x) {
-                    this.xsp *= -1;
+                    this.xsp *= -1; // Bounce from left of vertical bar
                     this.x = bar.x - this.radius;
                     bounced = true;
                 } else if (bar.axis === 'y' && this.xsp < 0 && this.x + this.radius > bar.x + bar.width) {
-                    this.xsp *= -1;
+                    this.xsp *= -1; // Bounce from right of vertical bar
                     this.x = bar.x + bar.width + this.radius;
                     bounced = true;
                 }
@@ -73,7 +73,7 @@ class Ball {
                     localStorage.setItem("highScore", highScore);
                 }
                 alert("Game Over! Your score: " + score);
-                restartGame();  // Restart the game after game over
+                clearInterval(gameLoop);
             }
         }
     }
@@ -93,52 +93,33 @@ class Bar {
         ctx.fillRect(this.x, this.y, this.width, this.height);
     }
 
-    update(x, y) {
+    update(mouseX, mouseY) {
         if (this.axis === 'x') {
-            this.x = x - this.width / 2;
+            this.x = mouseX - this.width / 2;
         } else if (this.axis === 'y') {
-            this.y = y - this.height / 2;
+            this.y = mouseY - this.height / 2;
         }
     }
 }
 
-let ball1;
-let topBar, bottomBar, leftBar, rightBar;
-let bars = [];
-let mouseX = 0, mouseY = 0;
-let score = 0;
-let highScore = localStorage.getItem("highScore") || 0;
-let gameLoop;
+let ball1 = new Ball(100, 100);
+let topBar = new Bar(0, 0, 100, 10, 'x');
+let bottomBar = new Bar(0, area.height - 10, 100, 10, 'x');
+let leftBar = new Bar(0, 0, 10, 100, 'y');
+let rightBar = new Bar(area.width - 10, 0, 10, 100, 'y');
+let bars = [topBar, bottomBar, leftBar, rightBar];
+let clear = () => ctx.clearRect(0, 0, area.width, area.height);
 
-function setupGame() {
-    ball1 = new Ball(100, 100);
-    topBar = new Bar(0, 0, 100, 10, 'x');
-    bottomBar = new Bar(0, area.height - 10, 100, 10, 'x');
-    leftBar = new Bar(0, 0, 10, 100, 'y');
-    rightBar = new Bar(area.width - 10, 0, 10, 100, 'y');
-    bars = [topBar, bottomBar, leftBar, rightBar];
-    score = 0;
-}
-
-function clear() {
-    ctx.clearRect(0, 0, area.width, area.height);
-}
-
-function updatePosition(x, y) {
-    mouseX = x;
-    mouseY = y;
-}
-
+let mouseX = 0,
+    mouseY = 0;
 area.addEventListener('mousemove', (e) => {
     let rect = area.getBoundingClientRect();
-    updatePosition(e.clientX - rect.left, e.clientY - rect.top);
+    mouseX = e.clientX - rect.left;
+    mouseY = e.clientY - rect.top;
 });
 
-area.addEventListener('touchmove', (e) => {
-    let rect = area.getBoundingClientRect();
-    let touch = e.touches[0];
-    updatePosition(touch.clientX - rect.left, touch.clientY - rect.top);
-}, { passive: true });
+let score = 0;
+let highScore = localStorage.getItem("highScore") || 0;
 
 function drawScore() {
     ctx.font = "48px Arial";
@@ -149,29 +130,14 @@ function drawScore() {
     ctx.fillText("High Score: " + highScore, area.width / 2, area.height / 2 + 40);
 }
 
-function startGame() {
-    gameLoop = setInterval(() => {
-        clear();
-        ball1.draw();
-        ball1.update();
-        for (let bar of bars) {
-            bar.update(mouseX, mouseY);
-            bar.draw();
-        }
-        ball1.checkCollision(bars);
-        drawScore();
-    }, 17);
-}
-
-function stopGame() {
-    clearInterval(gameLoop);
-}
-
-function restartGame() {
-    stopGame();
-    setupGame();
-    startGame();
-}
-
-setupGame();
-startGame();
+let gameLoop = setInterval(() => {
+    clear();
+    ball1.draw();
+    ball1.update();
+    for (let bar of bars) {
+        bar.update(mouseX, mouseY);
+        bar.draw();
+    }
+    ball1.checkCollision(bars);
+    drawScore();
+}, 17);
