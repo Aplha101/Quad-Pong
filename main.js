@@ -125,13 +125,14 @@ function clear() {
     ctx.clearRect(0, 0, area.width, area.height);
 }
 
-// Handle both mouse and touch movements
+// Mouse movement for desktop controls
 area.addEventListener('mousemove', (e) => {
     let rect = area.getBoundingClientRect();
     mouseX = e.clientX - rect.left;
     mouseY = e.clientY - rect.top;
 });
 
+// Touch movement for mobile controls
 let touchStartX = 0, touchStartY = 0;
 
 area.addEventListener('touchstart', (e) => {
@@ -172,16 +173,16 @@ function startGame() {
         clear();
         ball1.draw();
         ball1.update();
+
         for (let bar of bars) {
-            if (window.innerWidth <= 768) {
-                // Use touch controls on mobile
-                bar.update(touchX, touchY);
-            } else {
-                // Use mouse controls on desktop
-                bar.update(mouseX, mouseY);
-            }
+            // Update bars based on either touch or mouse movements
+            let controlX = mouseX || touchX;
+            let controlY = mouseY || touchY;
+
+            bar.update(controlX, controlY);
             bar.draw();
         }
+
         ball1.checkCollision(bars);
         drawScore();
     }, 17);
