@@ -105,6 +105,7 @@ class Bar {
 let ball1;
 let topBar, bottomBar, leftBar, rightBar;
 let bars = [];
+let mouseX = 0, mouseY = 0;
 let touchX = 0, touchY = 0;
 let score = 0;
 let highScore = localStorage.getItem("highScore") || 0;
@@ -124,28 +125,32 @@ function clear() {
     ctx.clearRect(0, 0, area.width, area.height);
 }
 
-// Handle touch movements and swiping
-let touchStartX = 0;
-let touchStartY = 0;
+// Handle both mouse and touch movements
+area.addEventListener('mousemove', (e) => {
+    let rect = area.getBoundingClientRect();
+    mouseX = e.clientX - rect.left;
+    mouseY = e.clientY - rect.top;
+});
+
+let touchStartX = 0, touchStartY = 0;
 
 area.addEventListener('touchstart', (e) => {
     let touch = e.touches[0];
     touchStartX = touch.clientX;
     touchStartY = touch.clientY;
+    touchX = touch.clientX;
+    touchY = touch.clientY;
 }, { passive: true });
 
 area.addEventListener('touchmove', (e) => {
     let touch = e.touches[0];
-    let rect = area.getBoundingClientRect();
-
     let deltaX = touch.clientX - touchStartX;
     let deltaY = touch.clientY - touchStartY;
 
-    // Update position based on swipe
     touchX += deltaX;
     touchY += deltaY;
 
-    // Prevent bars from going off-screen
+    // Constrain bars within screen limits
     touchX = Math.max(0, Math.min(touchX, area.width));
     touchY = Math.max(0, Math.min(touchY, area.height));
 
@@ -168,7 +173,13 @@ function startGame() {
         ball1.draw();
         ball1.update();
         for (let bar of bars) {
-            bar.update(touchX, touchY);
+            if (window.innerWidth <= 768) {
+                // Use touch controls on mobile
+                bar.update(touchX, touchY);
+            } else {
+                // Use mouse controls on desktop
+                bar.update(mouseX, mouseY);
+            }
             bar.draw();
         }
         ball1.checkCollision(bars);
