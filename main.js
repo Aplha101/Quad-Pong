@@ -105,7 +105,7 @@ class Bar {
 let ball1;
 let topBar, bottomBar, leftBar, rightBar;
 let bars = [];
-let mouseX = 0, mouseY = 0;
+let touchX = 0, touchY = 0;
 let score = 0;
 let highScore = localStorage.getItem("highScore") || 0;
 let gameLoop;
@@ -124,20 +124,33 @@ function clear() {
     ctx.clearRect(0, 0, area.width, area.height);
 }
 
-function updatePosition(x, y) {
-    mouseX = x;
-    mouseY = y;
-}
+// Handle touch movements and swiping
+let touchStartX = 0;
+let touchStartY = 0;
 
-area.addEventListener('mousemove', (e) => {
-    let rect = area.getBoundingClientRect();
-    updatePosition(e.clientX - rect.left, e.clientY - rect.top);
-});
+area.addEventListener('touchstart', (e) => {
+    let touch = e.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+}, { passive: true });
 
 area.addEventListener('touchmove', (e) => {
-    let rect = area.getBoundingClientRect();
     let touch = e.touches[0];
-    updatePosition(touch.clientX - rect.left, touch.clientY - rect.top);
+    let rect = area.getBoundingClientRect();
+
+    let deltaX = touch.clientX - touchStartX;
+    let deltaY = touch.clientY - touchStartY;
+
+    // Update position based on swipe
+    touchX += deltaX;
+    touchY += deltaY;
+
+    // Prevent bars from going off-screen
+    touchX = Math.max(0, Math.min(touchX, area.width));
+    touchY = Math.max(0, Math.min(touchY, area.height));
+
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
 }, { passive: true });
 
 function drawScore() {
@@ -155,7 +168,7 @@ function startGame() {
         ball1.draw();
         ball1.update();
         for (let bar of bars) {
-            bar.update(mouseX, mouseY);
+            bar.update(touchX, touchY);
             bar.draw();
         }
         ball1.checkCollision(bars);
