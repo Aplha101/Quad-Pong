@@ -11,8 +11,8 @@ class Ball {
         this.x = x;
         this.y = y;
         this.radius = 5;
-        this.xsp = 3;
-        this.ysp = 3;
+        this.xsp = 6;
+        this.ysp = 6;
     }
 
     draw() {
